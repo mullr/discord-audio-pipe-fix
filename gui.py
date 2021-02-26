@@ -1,6 +1,10 @@
 import os
 import sys
-import sound
+import platform
+if platform.system() == 'Linux':
+    import pulsectl
+else:
+    import sound
 import asyncio
 import logging
 import discord
@@ -67,7 +71,8 @@ class SVGButton(QPushButton):
 
 class Connection:
     def __init__(self, layer, parent):
-        self.stream = sound.PCMStream()
+        if platform.system() != 'Linux':
+            self.stream = sound.PCMStream()
         self.parent = parent
         self.voice = None
 
@@ -76,8 +81,12 @@ class Connection:
         self.servers = Dropdown()
         self.channels = Dropdown()
 
-        for device, idx in parent.devices.items():
-            self.devices.addItem(device + "   ", idx)
+        if platform.system() == 'Linux':
+            for device in parent.devices:
+                self.devices.addItem(device.description, device.name)
+        else:
+            for device, idx in parent.devices.items():
+                self.devices.addItem(device + "   ", idx)
 
         # mute
         self.mute = SVGButton("Mute")
@@ -133,13 +142,18 @@ class Connection:
 
             if self.voice is not None:
                 self.voice.stop()
-                self.stream.change_device(selection)
+                if platform.system() != 'Linux':
+                    self.stream.change_device(selection)
 
                 if self.voice.is_connected():
-                    self.voice.play(discord.PCMAudio(self.stream))
+                    if platform.system() == 'Linux':
+                        self.voice.play(discord.FFmpegPCMAudio(selection, before_options='-f pulse'))
+                    else:
+                        self.voice.play(discord.PCMAudio(self.stream))
 
             else:
-                self.stream.change_device(selection)
+                if platform.system() != 'Linux':
+                    self.stream.change_device(selection)
 
         except Exception:
             logging.exception("Error on change_device")
@@ -185,7 +199,10 @@ class Connection:
                 )
 
                 if not_playing:
-                    self.voice.play(discord.PCMAudio(self.stream))
+                    if platform.system() == 'Linux':
+                        self.voice.play(discord.FFmpegPCMAudio(self.devices.currentData(), before_options='-f pulse'))
+                    else:
+                        self.voice.play(discord.PCMAudio(self.stream))
 
             else:
                 if self.voice is not None:
@@ -297,7 +314,10 @@ class GUI(QMainWindow):
         channel_lb.setObjectName("label")
 
         # connections
-        self.devices = sound.query_devices()
+        if platform.system() == 'Linux':
+            self.devices = pulsectl.Pulse('localhost').source_list()
+        else:
+            self.devices = sound.query_devices()
         self.connections = [Connection(2, self)]
         self.connected_servers = set()
 
