@@ -14,15 +14,32 @@ You can download the latest release (for windows only) [**here**](https://github
 1. Follow the steps [**here**](https://discordpy.readthedocs.io/en/latest/discord.html) to setup and invite a discord bot
 2. To link the program to your bot, create a file ``token.txt`` in the same directory as the `.exe` / `main.pyw` and save the bot token inside
 
-## Dependencies (to be updated)
-Requires Python 3.5+. Install dependencies by running on a virtual environement (virtenv, pyenv, etc...):
-- On Windows `pip3 install -r requirements_win.txt`
-- On Linux `pip3 install -r requirements_linux.txt`
+## Dependencies on Windows
+Please just use the `.exe` on the original repo.
 
-In some cases the xcb library may be missing on linux. On Ubuntu it can be installed with
+## Dependencies on Linux
+Requires Python 3.5+.
+
+### ArchLinux / Manjaro
+With an AUR wrapper like `yay` :
 ```
-    $ sudo apt-get install libxcb-xinerama0
+yay -S libxcb qt5-svg python-pyqt5 ffmpeg python-pynacl python-discord python-pulsectl
 ```
+
+### Ubuntu / Debian
+With APT :
+```
+sudo apt install libxcb-xinerama0 python3-pyqt5.qtsvg ffmpeg python3-nacl python3-aiohttp
+```
+
+And with pip3 (as user) :
+```
+pip3 --user pulsectl discord.py
+```
+
+<!-- Install dependencies by running on a virtual environement (virtenv, pyenv, etc...):
+- On Windows `pip3 install -r requirements_win.txt`
+- On Linux `pip3 install -r requirements_linux.txt`-->
 
 ## CLI
 Running the `.exe` / `main.pyw` without any arguments will start the graphical interface. Alternatively, discord-audio-pipe can be run from the command line and contains some tools to query system audio devices and accessible channels.
