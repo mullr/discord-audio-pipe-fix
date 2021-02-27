@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 import logging
 
 # error logging
@@ -13,8 +14,12 @@ base_logger = logging.getLogger()
 base_logger.addHandler(error_handler)
 
 import sys
+import platform
 import cli
-import sound
+if platform.system() == 'Linux':
+    import pulsectl
+else:
+    import sound
 import asyncio
 import discord
 import argparse
@@ -50,14 +55,24 @@ connect.add_argument(
     help="The channel to connect to as an id",
 )
 
-connect.add_argument(
-    "-d",
-    "--device",
-    dest="device",
-    action="store",
-    type=int,
-    help="The device to listen from as an index",
-)
+if platform.system() == 'Linux':
+    connect.add_argument(
+        "-d",
+        "--device",
+        dest="device",
+        action="store",
+        type=str,
+        help="The device name to listen from",
+    )
+else:
+    connect.add_argument(
+        "-d",
+        "--device",
+        dest="device",
+        action="store",
+        type=int,
+        help="The device to listen from as an index",
+    )
 
 query.add_argument(
     "-D",
@@ -107,10 +122,16 @@ async def main(bot):
     try:
         # query devices
         if args.query:
-            for device, index in sound.query_devices().items():
-                print(index, device)
+            if platform.system() == 'Linux':
+                for source in pulsectl.Pulse('localhost').source_list():
+                    print(source.name, '| Desc:', source.description)
 
-            return
+                return
+            else:
+                for device, index in sound.query_devices().items():
+                    print(index, device)
+
+                return
 
         # check for token
         token = args.token

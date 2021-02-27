@@ -1,5 +1,9 @@
 import sys
-import sound
+import platform
+if platform.system() == 'Linux':
+    import pulsectl
+else:
+    import sound
 import discord
 import logging
 
@@ -10,12 +14,17 @@ async def connect(bot, device_id, channel_id):
         await bot.wait_until_ready()
         print(f"Logged in as {bot.user.name}")
 
-        stream = sound.PCMStream()
+        if platform.system() != 'Linux':
+            stream = sound.PCMStream()
+            stream.change_device(device_id)
         channel = bot.get_channel(channel_id)
-        stream.change_device(device_id)
+        
 
         voice = await channel.connect()
-        voice.play(discord.PCMAudio(stream))
+        if platform.system() == 'Linux':
+            voice.play(discord.FFmpegPCMAudio(device_id, before_options='-f pulse'))
+        else:
+            voice.play(discord.PCMAudio(stream))
 
         print(f"Playing audio in {channel.name}")
 
